@@ -1,8 +1,6 @@
 from eth_account import Account
 from eth_account.types import PrivateKeyType
-from eth_account.signers.local import (
-    LocalAccount,
-)
+from eth_account.signers.local import LocalAccount
 from typing import Optional
 
 

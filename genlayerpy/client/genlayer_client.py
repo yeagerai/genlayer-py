@@ -1,16 +1,15 @@
 from web3.eth import Eth
-from typing import Optional
-from genlayerpy.types import Chain
-from genlayerpy.provider import GenLayerProvider
 from web3 import Web3
 from web3.types import Nonce, BlockIdentifier, ENS
-from hexbytes import HexBytes
 from eth_typing import (
     Address,
     ChecksumAddress,
 )
-from typing import Optional, Union
 from eth_account.signers.local import LocalAccount
+from hexbytes import HexBytes
+from genlayerpy.types import Chain
+from genlayerpy.provider import GenLayerProvider
+from typing import Optional, Union
 from genlayerpy.accounts.actions import get_current_nonce, fund_account
 
 

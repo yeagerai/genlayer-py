@@ -1,4 +1,4 @@
-from genlayerpy.types import Address, CalldataEncodable
+from genlayerpy.types import CalldataAddress, CalldataEncodable
 from collections.abc import Buffer
 from typing import Any
 from . import consts
@@ -33,9 +33,9 @@ def decode(mem0: Buffer) -> CalldataEncodable:
             if code == consts.SPECIAL_TRUE:
                 return True
             if code == consts.SPECIAL_ADDR:
-                ret_addr = mem[: Address.SIZE]
-                mem = mem[Address.SIZE :]
-                return Address(ret_addr)
+                ret_addr = mem[: CalldataAddress.SIZE]
+                mem = mem[CalldataAddress.SIZE :]
+                return CalldataAddress(ret_addr)
             raise GenLayerError(f"Unknown special {bin(code)} {hex(code)}")
         code = code >> 3
         if typ == consts.TYPE_PINT:

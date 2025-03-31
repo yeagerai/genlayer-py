@@ -4,7 +4,7 @@ import base64
 from collections.abc import Sequence, Mapping, Buffer
 
 
-class Address:
+class CalldataAddress:
     SIZE = 20
 
     __slots__ = ("_as_bytes", "_as_hex")
@@ -15,13 +15,13 @@ class Address:
     def __init__(self, val: str | Buffer):
         self._as_hex = None
         if isinstance(val, str):
-            if len(val) == 2 + Address.SIZE * 2 and val.startswith("0x"):
+            if len(val) == 2 + CalldataAddress.SIZE * 2 and val.startswith("0x"):
                 val = bytes.fromhex(val[2:])
-            elif len(val) > Address.SIZE:
+            elif len(val) > CalldataAddress.SIZE:
                 val = base64.b64decode(val)
         else:
             val = bytes(val)
-        if not isinstance(val, bytes) or len(val) != Address.SIZE:
+        if not isinstance(val, bytes) or len(val) != CalldataAddress.SIZE:
             raise Exception(f"invalid address {val}")
         self._as_bytes = val
 
@@ -55,24 +55,24 @@ class Address:
         return hash(self._as_bytes)
 
     def __lt__(self, r):
-        assert isinstance(r, Address)
+        assert isinstance(r, CalldataAddress)
         return self._as_bytes < r._as_bytes
 
     def __le__(self, r):
-        assert isinstance(r, Address)
+        assert isinstance(r, CalldataAddress)
         return self._as_bytes <= r._as_bytes
 
     def __eq__(self, r):
-        if not isinstance(r, Address):
+        if not isinstance(r, CalldataAddress):
             return False
         return self._as_bytes == r._as_bytes
 
     def __ge__(self, r):
-        assert isinstance(r, Address)
+        assert isinstance(r, CalldataAddress)
         return self._as_bytes >= r._as_bytes
 
     def __gt__(self, r):
-        assert isinstance(r, Address)
+        assert isinstance(r, CalldataAddress)
         return self._as_bytes > r._as_bytes
 
     def __repr__(self) -> str:
@@ -85,9 +85,9 @@ CalldataEncodable = Union[
     str,
     int,
     bytes,
-    Address,
+    CalldataAddress,
     Sequence["CalldataEncodable"],
     Mapping[str, "CalldataEncodable"],
 ]
 
-TransactionDataElement = Union[str, int, bool, bytes, Address]
+TransactionDataElement = Union[str, int, bool, bytes, CalldataAddress]

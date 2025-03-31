@@ -1,5 +1,5 @@
 from genlayerpy.exceptions import GenLayerError
-from genlayerpy.types import Address, CalldataEncodable
+from genlayerpy.types import CalldataAddress, CalldataEncodable
 import json
 
 
@@ -20,7 +20,7 @@ def to_str(d: CalldataEncodable) -> str:
             buf.append(d.hex())
         elif isinstance(d, int):
             buf.append(str(d))
-        elif isinstance(d, Address):
+        elif isinstance(d, CalldataAddress):
             buf.append("addr#")
             buf.append(d.as_bytes.hex())
         elif isinstance(d, dict):

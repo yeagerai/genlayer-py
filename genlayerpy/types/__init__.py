@@ -1,3 +1,3 @@
-from .calldata import Address, CalldataEncodable
+from .calldata import CalldataAddress, CalldataEncodable
 from .transactions import GenLayerTransaction, TransactionStatus
 from .chain import Chain, NativeCurrency, ConsensusMainContract, SimulatorChain

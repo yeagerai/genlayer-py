@@ -1,6 +1,6 @@
 from typing import Any
 from . import consts
-from genlayerpy.types import Address, CalldataEncodable
+from genlayerpy.types import CalldataAddress, CalldataEncodable
 from genlayerpy.exceptions import GenLayerError
 from collections.abc import Sequence, Mapping
 import dataclasses
@@ -49,7 +49,7 @@ def encode(x: CalldataEncodable) -> bytes:
                 b = -b - 1
                 b = (b << 3) | consts.TYPE_NINT
                 append_uleb128(b)
-        elif isinstance(b, Address):
+        elif isinstance(b, CalldataAddress):
             mem.append(consts.SPECIAL_ADDR)
             mem.extend(b.as_bytes)
         elif isinstance(b, bytes):

@@ -14,4 +14,5 @@ def create_client(
     if endpoint is not None:
         chain_config.rpc_urls["default"]["http"] = [endpoint]
     client = GenLayerClient(chain_config, account)
+    client.initialize_consensus_smart_contract()
     return client

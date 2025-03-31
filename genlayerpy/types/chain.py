@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Any, Optional, Dict
+from typing import List, Any, Optional, Dict, TypedDict
 
 
 @dataclass
@@ -19,8 +19,7 @@ class Chain:
     testnet: bool
 
 
-@dataclass
-class ConsensusMainContract:
+class ConsensusMainContract(TypedDict):
     address: str
     abi: List[Any]
     bytecode: str

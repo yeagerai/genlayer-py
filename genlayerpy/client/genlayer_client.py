@@ -12,6 +12,7 @@ from genlayerpy.provider import GenLayerProvider
 from typing import Optional, Union, List, Dict
 from genlayerpy.accounts.actions import get_current_nonce, fund_account
 from genlayerpy.contracts.actions import read_contract
+from genlayerpy.chains.actions import initialize_consensus_smart_contract
 
 
 class GenLayerClient(Eth):
@@ -61,3 +62,10 @@ class GenLayerClient(Eth):
             state_status=state_status,
             raw_return=raw_return,
         )
+
+    # Chain actions
+    def initialize_consensus_smart_contract(
+        self,
+        force_reset: bool = False,
+    ) -> None:
+        return initialize_consensus_smart_contract(self=self, force_reset=force_reset)

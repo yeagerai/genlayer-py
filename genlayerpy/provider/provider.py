@@ -29,11 +29,14 @@ class GenLayerProvider(BaseProvider):
         }
         try:
             response = requests.post(
-                self.url, json=payload, headers={"Content-Type": "application/json"}
+                self.url,
+                json=payload,
+                headers={"Content-Type": "application/json"},
+                timeout=5,
             )
         except HTTPError as err:
             raise GenLayerError(str(err)) from err
-        
+
         if response.status_code != 200:
             raise GenLayerError(response.text)
         return response.json()

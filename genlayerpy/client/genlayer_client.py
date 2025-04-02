@@ -1,17 +1,36 @@
 from web3.eth import Eth
 from web3 import Web3
-from web3.types import Nonce, BlockIdentifier, ENS
+from web3.types import Nonce, BlockIdentifier, ENS, _Hash32
 from eth_typing import (
     Address,
     ChecksumAddress,
 )
 from eth_account.signers.local import LocalAccount
 from hexbytes import HexBytes
-from genlayerpy.types import Chain, TransactionStatus, CalldataEncodable
+from typing import AnyStr
+from genlayerpy.types import (
+    Chain,
+    TransactionStatus,
+    CalldataEncodable,
+    GenLayerTransaction,
+    ContractSchema,
+)
 from genlayerpy.provider import GenLayerProvider
 from typing import Optional, Union, List, Dict
 from genlayerpy.accounts.actions import get_current_nonce, fund_account
-from genlayerpy.contracts.actions import read_contract
+from genlayerpy.contracts.actions import (
+    read_contract,
+    write_contract,
+    deploy_contract,
+    get_contract_schema,
+    get_contract_schema_for_code,
+)
+from genlayerpy.chains.actions import initialize_consensus_smart_contract
+from genlayerpy.transactions.actions import (
+    wait_for_transaction_receipt,
+    get_transaction,
+)
+from genlayerpy.config import transaction_config
 
 
 class GenLayerClient(Eth):
@@ -40,6 +59,13 @@ class GenLayerClient(Eth):
     ) -> Nonce:
         return get_current_nonce(self, address, block_identifier)
 
+    # Chain actions
+    def initialize_consensus_smart_contract(
+        self,
+        force_reset: bool = False,
+    ) -> None:
+        return initialize_consensus_smart_contract(self=self, force_reset=force_reset)
+
     # Contract actions
     def read_contract(
         self,
@@ -61,3 +87,85 @@ class GenLayerClient(Eth):
             state_status=state_status,
             raw_return=raw_return,
         )
+
+    def write_contract(
+        self,
+        address: Union[Address, ChecksumAddress],
+        function_name: str,
+        account: Optional[LocalAccount] = None,
+        consensus_max_rotations: Optional[int] = None,
+        value: int = 0,
+        leader_only: bool = False,
+        args: Optional[List[CalldataEncodable]] = None,
+        kwargs: Optional[Dict[str, CalldataEncodable]] = None,
+    ):
+        return write_contract(
+            self=self,
+            address=address,
+            function_name=function_name,
+            account=account,
+            consensus_max_rotations=consensus_max_rotations,
+            value=value,
+            leader_only=leader_only,
+            args=args,
+            kwargs=kwargs,
+        )
+
+    def deploy_contract(
+        self,
+        code: Union[str, bytes],
+        account: Optional[LocalAccount] = None,
+        args: Optional[List[CalldataEncodable]] = None,
+        kwargs: Optional[Dict[str, CalldataEncodable]] = None,
+        consensus_max_rotations: Optional[int] = None,
+        leader_only: bool = False,
+    ):
+        return deploy_contract(
+            self=self,
+            code=code,
+            account=account,
+            args=args,
+            kwargs=kwargs,
+            consensus_max_rotations=consensus_max_rotations,
+            leader_only=leader_only,
+        )
+
+    def get_contract_schema(
+        self,
+        address: Union[Address, ChecksumAddress],
+    ) -> ContractSchema:
+        return get_contract_schema(
+            self=self,
+            address=address,
+        )
+
+    def get_contract_schema_for_code(
+        self,
+        contract_code: AnyStr,
+    ) -> ContractSchema:
+        return get_contract_schema_for_code(
+            self=self,
+            contract_code=contract_code,
+        )
+
+    # Transaction actions
+    def wait_for_transaction_receipt(
+        self,
+        transaction_hash: _Hash32,
+        status: TransactionStatus = TransactionStatus.ACCEPTED,
+        interval: int = transaction_config.wait_interval,
+        retries: int = transaction_config.retries,
+    ) -> GenLayerTransaction:
+        return wait_for_transaction_receipt(
+            self=self,
+            transaction_hash=transaction_hash,
+            status=status,
+            interval=interval,
+            retries=retries,
+        )
+
+    def get_transaction(
+        self,
+        transaction_hash: _Hash32,
+    ) -> GenLayerTransaction:
+        return get_transaction(self=self, transaction_hash=transaction_hash)

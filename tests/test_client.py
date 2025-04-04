@@ -1,5 +1,5 @@
-from genlayerpy.client.client import GenLayerClient, create_client
-from genlayerpy.chains import localnet
+from genlayer_py.client.client import GenLayerClient, create_client
+from genlayer_py.chains import localnet
 
 
 def test_create_client_default():

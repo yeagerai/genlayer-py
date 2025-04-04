@@ -8,29 +8,29 @@ from eth_typing import (
 from eth_account.signers.local import LocalAccount
 from hexbytes import HexBytes
 from typing import AnyStr
-from genlayerpy.types import (
+from genlayer_py.types import (
     Chain,
     TransactionStatus,
     CalldataEncodable,
     GenLayerTransaction,
     ContractSchema,
 )
-from genlayerpy.provider import GenLayerProvider
+from genlayer_py.provider import GenLayerProvider
 from typing import Optional, Union, List, Dict
-from genlayerpy.accounts.actions import get_current_nonce, fund_account
-from genlayerpy.contracts.actions import (
+from genlayer_py.accounts.actions import get_current_nonce, fund_account
+from genlayer_py.contracts.actions import (
     read_contract,
     write_contract,
     deploy_contract,
     get_contract_schema,
     get_contract_schema_for_code,
 )
-from genlayerpy.chains.actions import initialize_consensus_smart_contract
-from genlayerpy.transactions.actions import (
+from genlayer_py.chains.actions import initialize_consensus_smart_contract
+from genlayer_py.transactions.actions import (
     wait_for_transaction_receipt,
     get_transaction,
 )
-from genlayerpy.config import transaction_config
+from genlayer_py.config import transaction_config
 
 
 class GenLayerClient(Eth):

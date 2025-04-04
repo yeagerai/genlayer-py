@@ -1,6 +1,6 @@
 import base64
 from typing import Any, Dict
-from genlayerpy.abi import calldata
+from genlayer_py.abi import calldata
 
 def b64_to_array(b64: str) -> bytearray:
     return bytearray(base64.b64decode(b64))

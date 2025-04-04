@@ -1,7 +1,7 @@
 from eth_account import Account
 from eth_account.signers.local import LocalAccount
 
-from genlayerpy.accounts.account import generate_private_key, create_account
+from genlayer_py.accounts.account import generate_private_key, create_account
 
 
 def test_generate_private_key():

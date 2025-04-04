@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from genlayerpy.chains import localnet
+from genlayer_py.chains import localnet
 from hexbytes import HexBytes
 from web3.types import Nonce, BlockIdentifier, ENS
-from genlayerpy.exceptions import GenLayerError
+from genlayer_py.exceptions import GenLayerError
 from eth_typing import (
     Address,
     ChecksumAddress,
@@ -12,7 +12,7 @@ from eth_typing import (
 from typing import Optional, Union
 
 if TYPE_CHECKING:
-    from genlayerpy.client import GenLayerClient
+    from genlayer_py.client import GenLayerClient
 
 
 def fund_account(

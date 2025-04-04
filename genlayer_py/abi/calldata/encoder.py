@@ -1,7 +1,7 @@
 from typing import Any
 from . import consts
-from genlayerpy.types import CalldataAddress, CalldataEncodable
-from genlayerpy.exceptions import GenLayerError
+from genlayer_py.types import CalldataAddress, CalldataEncodable
+from genlayer_py.exceptions import GenLayerError
 from collections.abc import Sequence, Mapping
 import dataclasses
 

@@ -3,7 +3,7 @@ from web3.types import RPCEndpoint, RPCResponse
 from typing import Any, Union, List
 from requests import HTTPError
 import requests
-from genlayerpy.exceptions import GenLayerError
+from genlayer_py.exceptions import GenLayerError
 import time
 
 

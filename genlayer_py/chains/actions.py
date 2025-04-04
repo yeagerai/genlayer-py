@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from .localnet import localnet
 
-from genlayerpy.exceptions import GenLayerError
+from genlayer_py.exceptions import GenLayerError
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from genlayerpy.client import GenLayerClient
+    from genlayer_py.client import GenLayerClient
 
 
 def initialize_consensus_smart_contract(

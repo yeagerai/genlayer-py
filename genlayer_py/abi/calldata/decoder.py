@@ -1,8 +1,8 @@
-from genlayerpy.types import CalldataAddress, CalldataEncodable
+from genlayer_py.types import CalldataAddress, CalldataEncodable
 from collections.abc import Buffer
 from typing import Any
 from . import consts
-from genlayerpy.exceptions import GenLayerError
+from genlayer_py.exceptions import GenLayerError
 
 
 def decode(mem0: Buffer) -> CalldataEncodable:

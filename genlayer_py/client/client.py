@@ -1,6 +1,6 @@
 from typing import Optional
-from genlayerpy.types import Chain
-from genlayerpy.chains import localnet
+from genlayer_py.types import Chain
+from genlayer_py.chains import localnet
 from .genlayer_client import GenLayerClient
 from eth_account.signers.local import LocalAccount
 

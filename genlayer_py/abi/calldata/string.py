@@ -1,5 +1,5 @@
-from genlayerpy.exceptions import GenLayerError
-from genlayerpy.types import CalldataAddress, CalldataEncodable
+from genlayer_py.exceptions import GenLayerError
+from genlayer_py.types import CalldataAddress, CalldataEncodable
 import json
 
 

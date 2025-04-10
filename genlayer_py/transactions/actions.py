@@ -1,21 +1,21 @@
 from __future__ import annotations
 
 from web3.types import _Hash32
-from genlayerpy.config import transaction_config
-from genlayerpy.types import TransactionStatus
-from genlayerpy.exceptions import GenLayerError
+from genlayer_py.config import transaction_config
+from genlayer_py.types import TransactionStatus
+from genlayer_py.exceptions import GenLayerError
 from typing import TYPE_CHECKING
-from genlayerpy.types import GenLayerTransaction
+from genlayer_py.types import GenLayerTransaction
 import time
 import base64
-from genlayerpy.utils.jsonifier import (
+from genlayer_py.utils.jsonifier import (
     calldata_to_user_friendly_json,
     result_to_user_friendly_json,
     b64_to_array,
 )
 
 if TYPE_CHECKING:
-    from genlayerpy.client import GenLayerClient
+    from genlayer_py.client import GenLayerClient
 
 
 def wait_for_transaction_receipt(

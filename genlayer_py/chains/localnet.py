@@ -1,4 +1,4 @@
-from genlayerpy.types import SimulatorChain, NativeCurrency
+from genlayer_py.types import SimulatorChain, NativeCurrency
 
 SIMULATOR_JSON_RPC_URL = "http://127.0.0.1:4000/api"
 

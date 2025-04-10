@@ -27,8 +27,8 @@ Here’s how to initialize the client and connect to the GenLayer Simulator:
 
 ### Reading a Transaction
 ```python
-from genlayerpy import create_client
-from genlayerpy.chains import localnet
+from genlayer_py import create_client
+from genlayer_py.chains import localnet
 
 client = create_client(
     chain=localnet,
@@ -42,8 +42,8 @@ transaction = client.get_transaction(hash=transaction_hash)
 
 ### Reading a contract
 ```python
-from genlayerpy import create_client
-from genlayerpy.chains import localnet
+from genlayer_py import create_client
+from genlayer_py.chains import localnet
 
 client = create_client(
     chain=localnet,
@@ -59,8 +59,8 @@ result = client.read_contract(
 
 ### Writing a transaction
 ```python
-from genlayerpy.chains import localnet
-from genlayerpy import create_client, create_account
+from genlayer_py.chains import localnet
+from genlayer_py import create_client, create_account
 
 client = create_client(
     chain=localnet,
@@ -87,7 +87,6 @@ receipt = client.wait_for_transaction_receipt(
 
 * **Client Creation**: Easily create and configure a client to connect to GenLayer’s network.
 * **Transaction Handling**: Send and manage transactions on the GenLayer network.
-* **Wallet Integration***: Seamless integration with MetaMask for managing user accounts.
 * **Gas Estimation***: Estimate gas fees for executing transactions on GenLayer.
 
 _* under development_

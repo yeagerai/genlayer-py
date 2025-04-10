@@ -4,14 +4,14 @@ import eth_utils
 from eth_abi import encode as abi_encode
 from typing import TYPE_CHECKING, Optional, Union, List, Dict, AnyStr
 from eth_typing import Address, ChecksumAddress, HexStr
-from genlayerpy.types import TransactionStatus, CalldataEncodable, ContractSchema
-from genlayerpy.exceptions import GenLayerError
-from genlayerpy.abi import calldata
-from genlayerpy.abi.transactions import serialize
+from genlayer_py.types import TransactionStatus, CalldataEncodable, ContractSchema
+from genlayer_py.exceptions import GenLayerError
+from genlayer_py.abi import calldata
+from genlayer_py.abi.transactions import serialize
 from web3.constants import ADDRESS_ZERO
 
 if TYPE_CHECKING:
-    from genlayerpy.client import GenLayerClient
+    from genlayer_py.client import GenLayerClient
 
 
 def make_calldata_object(

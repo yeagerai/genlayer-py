@@ -9,7 +9,7 @@ on:
     types: [opened, reopened, synchronize, ready_for_review]
 
 jobs:
-  run_tests:
+  run_unit_tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,4 +28,4 @@ jobs:
           pip install -r requirements.test.txt
 
       - name: Run Pytest
-        run: pytest --maxfail=5 --disable-warnings -v
+        run: pytest tests/unit --maxfail=5 --disable-warnings -v

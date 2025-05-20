@@ -1,10 +1,12 @@
 from genlayer_py.types import GenLayerChain, NativeCurrency
 from .abi import CONSENSUS_MAIN_ABI, CONSENSUS_DATA_ABI
 
-SIMULATOR_JSON_RPC_URL = "http://127.0.0.1:4000/api"
+
+TESTNET_JSON_RPC_URL = "http://34.32.169.58:9151"
+EXPLORER_URL = "https://explorer-asimov.genlayer.com/"
 
 CONSENSUS_MAIN_CONTRACT = {
-    "address": "0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575",
+    "address": "0x174782d5819dD26F3d6967c995EE43db7DB824F8",
     "abi": CONSENSUS_MAIN_ABI,
     "bytecode": "",
 }
@@ -15,17 +17,19 @@ CONSENSUS_DATA_CONTRACT = {
     "bytecode": "",
 }
 
-localnet: GenLayerChain = GenLayerChain(
-    id=61999,
-    name="GenLayer Localnet",
+
+testnet_asimov: GenLayerChain = GenLayerChain(
+    id=4221,
+    name="Genlayer Asimov Testnet",
     rpc_urls={
-        "default": {
-            "http": [SIMULATOR_JSON_RPC_URL],
-        },
+        "default": {"http": [TESTNET_JSON_RPC_URL]},
     },
     native_currency=NativeCurrency(name="GEN Token", symbol="GEN", decimals=18),
     block_explorers={
-        "default": {"name": "GenLayer Explorer", "url": SIMULATOR_JSON_RPC_URL}
+        "default": {
+            "name": "GenLayer Asimov Explorer",
+            "url": EXPLORER_URL,
+        }
     },
     testnet=True,
     consensus_main_contract=CONSENSUS_MAIN_CONTRACT,

@@ -9,11 +9,12 @@ from eth_account.signers.local import LocalAccount
 from hexbytes import HexBytes
 from typing import AnyStr
 from genlayer_py.types import (
-    Chain,
+    GenLayerChain,
     TransactionStatus,
     CalldataEncodable,
     GenLayerTransaction,
     ContractSchema,
+    TransactionHashVariant,
 )
 from genlayer_py.provider import GenLayerProvider
 from typing import Optional, Union, List, Dict
@@ -38,12 +39,15 @@ class GenLayerClient(Eth):
     The client to interact with GenLayer Network
     """
 
-    def __init__(self, chain_config: Chain, account: Optional[LocalAccount] = None):
+    def __init__(
+        self, chain_config: GenLayerChain, account: Optional[LocalAccount] = None
+    ):
         self.chain = chain_config
         self.local_account = account
         url = chain_config.rpc_urls["default"]["http"][0]
         self.provider = GenLayerProvider(url)
         web3 = Web3(provider=self.provider)
+
         super().__init__(web3)
 
     ## Account actions
@@ -74,8 +78,8 @@ class GenLayerClient(Eth):
         args: Optional[List[CalldataEncodable]] = None,
         kwargs: Optional[Dict[str, CalldataEncodable]] = None,
         account: Optional[LocalAccount] = None,
-        state_status: Optional[TransactionStatus] = None,
         raw_return: bool = False,
+        transaction_hash_variant: TransactionHashVariant = TransactionHashVariant.LATEST_FINAL,
     ):
         return read_contract(
             self=self,
@@ -84,8 +88,8 @@ class GenLayerClient(Eth):
             args=args,
             kwargs=kwargs,
             account=account,
-            state_status=state_status,
             raw_return=raw_return,
+            transaction_hash_variant=transaction_hash_variant,
         )
 
     def write_contract(

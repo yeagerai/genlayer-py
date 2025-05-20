@@ -27,3 +27,6 @@ classifiers = [
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools.package-data]
+"genlayer_py" = ["chains/abi/*.json"]

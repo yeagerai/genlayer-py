@@ -2,13 +2,19 @@ from __future__ import annotations
 from eth_account.signers.local import LocalAccount
 import eth_utils
 from eth_abi import encode as abi_encode
-from typing import TYPE_CHECKING, Optional, Union, List, Dict, AnyStr
+from typing import TYPE_CHECKING, Optional, Union, List, Dict, AnyStr, Any
 from eth_typing import Address, ChecksumAddress, HexStr
-from genlayer_py.types import TransactionStatus, CalldataEncodable, ContractSchema
+from genlayer_py.types import (
+    CalldataEncodable,
+    ContractSchema,
+    TransactionHashVariant,
+)
 from genlayer_py.exceptions import GenLayerError
 from genlayer_py.abi import calldata
 from genlayer_py.abi.transactions import serialize
+from genlayer_py.chains import localnet
 from web3.constants import ADDRESS_ZERO
+from web3.logs import DISCARD
 
 if TYPE_CHECKING:
     from genlayer_py.client import GenLayerClient
@@ -33,6 +39,9 @@ def get_contract_schema(
     self: GenLayerClient,
     address: Union[Address, ChecksumAddress],
 ) -> ContractSchema:
+    if self.chain.id != localnet.id:
+        raise GenLayerError("Contract schema is not supported on this network")
+
     response = self.provider.make_request(
         method="gen_getContractSchema", params=[address]
     )
@@ -43,6 +52,9 @@ def get_contract_schema_for_code(
     self: GenLayerClient,
     contract_code: AnyStr,
 ) -> ContractSchema:
+    if self.chain.id != localnet.id:
+        raise GenLayerError("Contract schema is not supported on this network")
+
     response = self.provider.make_request(
         method="gen_getContractSchemaForCode",
         params=[eth_utils.hexadecimal.encode_hex(contract_code)],
@@ -57,33 +69,35 @@ def read_contract(
     args: Optional[List[CalldataEncodable]] = None,
     kwargs: Optional[Dict[str, CalldataEncodable]] = None,
     account: Optional[LocalAccount] = None,
-    state_status: Optional[TransactionStatus] = None,
     raw_return: bool = False,
+    transaction_hash_variant: TransactionHashVariant = TransactionHashVariant.LATEST_FINAL,
 ) -> CalldataEncodable:
     if account is None and self.local_account is None:
         raise GenLayerError("No account provided and no account is connected")
     sender_address = self.local_account.address
-    encoded_data = eth_utils.hexadecimal.encode_hex(
+    data = [
         calldata.encode(
             make_calldata_object(method=function_name, args=args, kwargs=kwargs)
-        )
-    )
+        ),
+        b"\x00",
+    ]
+    serialized_data = serialize(data)
     request_params = {
+        "type": "read",
         "to": address,
         "from": sender_address,
-        "data": encoded_data,
+        "data": serialized_data,
+        "transaction_hash_variant": transaction_hash_variant.value,
     }
     response = self.provider.make_request(
-        method="eth_call",
-        params=[
-            request_params,
-            "finalized" if state_status == TransactionStatus.FINALIZED else "latest",
-        ],
+        method="gen_call",
+        params=[request_params],
     )
     enc_result = response["result"]
+    prefixed_result = "0x" + enc_result
     if raw_return:
-        return enc_result
-    result = calldata.decode(eth_utils.hexadecimal.decode_hex(enc_result))
+        return prefixed_result
+    result = calldata.decode(eth_utils.hexadecimal.decode_hex(prefixed_result))
     return result
 
 
@@ -145,6 +159,42 @@ def deploy_contract(
     )
 
 
+def prepare_transaction(
+    self: GenLayerClient,
+    sender: Union[Address, ChecksumAddress],
+    recipient: Union[Address, ChecksumAddress],
+    data: HexStr,
+    value: int = 0,
+) -> Dict[str, Any]:
+
+    nonce = self.get_current_nonce(address=sender)
+
+    if self.chain.id != localnet.id:
+        latest_block = self.w3.eth.get_block("latest")
+        base_fee = latest_block["baseFeePerGas"]
+        priority_fee = self.w3.to_wei(2, "gwei")
+        max_fee = base_fee + priority_fee
+        fee_data = {
+            "maxFeePerGas": max_fee,
+            "maxPriorityFeePerGas": priority_fee,
+        }
+    else:
+        fee_data = {
+            "gasPrice": 0,
+        }
+
+    transaction = {
+        "nonce": nonce,
+        "gas": 987474,
+        "data": data,
+        "to": recipient,
+        "value": value,
+        **fee_data,
+        "chainId": self.chain.id,
+    }
+    return transaction
+
+
 def send_transaction(
     self: GenLayerClient,
     recipient: Union[Address, ChecksumAddress],
@@ -163,10 +213,10 @@ def send_transaction(
             "Consensus main contract not initialized. Please ensure client is properly initialized.",
         )
 
-    contract_abi = self.chain.consensus_main_contract["abi"]
-    contract_fn = self.w3.eth.contract(abi=contract_abi).get_function_by_name(
-        "addTransaction"
+    consensus_main_contract = self.w3.eth.contract(
+        abi=self.chain.consensus_main_contract["abi"]
     )
+    contract_fn = consensus_main_contract.get_function_by_name("addTransaction")
     params = abi_encode(
         contract_fn.argument_types,
         [
@@ -180,18 +230,28 @@ def send_transaction(
     function_selector = eth_utils.keccak(text=contract_fn.signature)[:4].hex()
     encoded_data = "0x" + function_selector + params.hex()
 
-    nonce = self.get_current_nonce(address=sender_account.address)
-    transaction = {
-        "nonce": nonce,
-        "gasPrice": 0,
-        "gas": 0,
-        "data": encoded_data,
-        "to": recipient,
-        "value": value,
-    }
+    transaction = prepare_transaction(
+        self=self,
+        sender=sender_account.address,
+        recipient=self.chain.consensus_main_contract["address"],
+        data=encoded_data,
+        value=value,
+    )
     signed_transaction = sender_account.sign_transaction(transaction)
     serialized_transaction = self.w3.to_hex(signed_transaction.raw_transaction)
-    response = self.provider.make_request(
+
+    tx_hash = self.provider.make_request(
         method="eth_sendRawTransaction", params=[serialized_transaction]
-    )
-    return response["result"]
+    )["result"]
+    tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
+
+    if tx_receipt.status != 1:
+        raise GenLayerError("Transaction failed")
+
+    event = consensus_main_contract.get_event_by_name("NewTransaction")
+    events = event.process_receipt(tx_receipt, DISCARD)
+
+    if len(events) == 0:
+        raise GenLayerError("Transaction not processed by consensus")
+
+    return self.w3.to_hex(events[0]["args"]["txId"])

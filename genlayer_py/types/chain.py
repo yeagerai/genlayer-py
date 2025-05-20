@@ -19,14 +19,15 @@ class Chain:
     testnet: bool
 
 
-class ConsensusMainContract(TypedDict):
+class ContractInfo(TypedDict):
     address: str
     abi: List[Any]
     bytecode: str
 
 
 @dataclass
-class SimulatorChain(Chain):
-    consensus_main_contract: Optional[ConsensusMainContract]
+class GenLayerChain(Chain):
+    consensus_main_contract: Optional[ContractInfo]
+    consensus_data_contract: Optional[ContractInfo]
     default_number_of_initial_validators: int
     default_consensus_max_rotations: int

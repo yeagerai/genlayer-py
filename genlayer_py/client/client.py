@@ -1,12 +1,12 @@
 from typing import Optional
-from genlayer_py.types import Chain
+from genlayer_py.types import GenLayerChain
 from genlayer_py.chains import localnet
 from .genlayer_client import GenLayerClient
 from eth_account.signers.local import LocalAccount
 
 
 def create_client(
-    chain: Chain = localnet,
+    chain: GenLayerChain = localnet,
     endpoint: Optional[str] = None,
     account: Optional[LocalAccount] = None,
 ) -> GenLayerClient:

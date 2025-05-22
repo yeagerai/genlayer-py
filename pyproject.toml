@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "genlayer-py"
-version = "0.1.0"
+version = "0.2.0"
 description = "GenLayer Python SDK"
 authors = [
     { name = "GenLayer" }
@@ -27,3 +27,6 @@ classifiers = [
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.setuptools.package-data]
+"genlayer_py" = ["chains/abi/*.json"]

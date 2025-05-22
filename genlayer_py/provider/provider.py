@@ -32,7 +32,6 @@ class GenLayerProvider(BaseProvider):
                 self.url,
                 json=payload,
                 headers={"Content-Type": "application/json"},
-                timeout=5,
             )
         except HTTPError as err:
             raise GenLayerError(str(err)) from err

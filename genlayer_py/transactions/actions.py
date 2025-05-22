@@ -2,12 +2,13 @@ from __future__ import annotations
 
 from web3.types import _Hash32
 from genlayer_py.config import transaction_config
-from genlayer_py.types import TransactionStatus
+from genlayer_py.types import TransactionStatus, TRANSACTION_STATUS_NAME_TO_NUMBER
 from genlayer_py.exceptions import GenLayerError
 from typing import TYPE_CHECKING
-from genlayer_py.types import GenLayerTransaction
+from genlayer_py.types import GenLayerTransaction, GenLayerRawTransaction
 import time
 import base64
+from genlayer_py.chains import localnet
 from genlayer_py.utils.jsonifier import (
     calldata_to_user_friendly_json,
     result_to_user_friendly_json,
@@ -28,14 +29,20 @@ def wait_for_transaction_receipt(
 
     attempts = 0
     while attempts < retries:
-        transaction_response = self.get_transaction(transaction_hash=transaction_hash)
-        transaction_status = transaction_response["status"]
-        if transaction_status == status or (
+        transaction = self.get_transaction(transaction_hash=transaction_hash)
+        if transaction is None:
+            raise GenLayerError(f"Transaction {transaction_hash} not found")
+        transaction_status = str(transaction["status"])
+        finalized_status = TRANSACTION_STATUS_NAME_TO_NUMBER[
+            TransactionStatus.FINALIZED
+        ]
+        requested_status = TRANSACTION_STATUS_NAME_TO_NUMBER[status]
+
+        if transaction_status == requested_status or (
             status == TransactionStatus.ACCEPTED
-            and transaction_status == TransactionStatus.FINALIZED
+            and transaction_status == finalized_status
         ):
-            decoded = decode_transaction(transaction_response)
-            return decoded
+            return transaction
         time.sleep(interval / 1000)
         attempts += 1
     raise GenLayerError(
@@ -47,13 +54,31 @@ def get_transaction(
     self: GenLayerClient,
     transaction_hash: _Hash32,
 ) -> GenLayerTransaction:
-    response = self.provider.make_request(
-        method="eth_getTransactionByHash", params=[transaction_hash]
+    if self.chain.id == localnet.id:
+        transaction = self.provider.make_request(
+            method="eth_getTransactionByHash", params=[transaction_hash]
+        )["result"]
+        localnet_status = (
+            TransactionStatus.PENDING
+            if transaction["status"] == "ACTIVATED"
+            else transaction["status"]
+        )
+        transaction["status"] = int(TRANSACTION_STATUS_NAME_TO_NUMBER[localnet_status])
+        transaction["status_name"] = localnet_status
+        return _decode_localnet_transaction(transaction)
+    # Decode for testnet
+    consensus_data_contract = self.w3.eth.contract(
+        address=self.chain.consensus_data_contract["address"],
+        abi=self.chain.consensus_data_contract["abi"],
     )
-    return response["result"]
+    transaction = consensus_data_contract.functions.getTransactionData(
+        transaction_hash, int(time.time())
+    ).call()
+    raw_transaction = GenLayerRawTransaction.from_transaction_data(transaction)
+    return raw_transaction.decode()
 
 
-def decode_transaction(tx: GenLayerTransaction) -> GenLayerTransaction:
+def _decode_localnet_transaction(tx: GenLayerTransaction) -> GenLayerTransaction:
     if "data" not in tx or tx["data"] is None:
         return tx
 

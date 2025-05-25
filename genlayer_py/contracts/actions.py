@@ -40,7 +40,9 @@ def get_contract_schema(
     address: Union[Address, ChecksumAddress],
 ) -> ContractSchema:
     if self.chain.id != localnet.id:
-        raise GenLayerError("Contract schema is not supported on this network")
+        raise GenLayerError(
+            "Contract schema by address is not supported on this network"
+        )
 
     response = self.provider.make_request(
         method="gen_getContractSchema", params=[address]
@@ -52,12 +54,17 @@ def get_contract_schema_for_code(
     self: GenLayerClient,
     contract_code: AnyStr,
 ) -> ContractSchema:
+    encoded_code = eth_utils.hexadecimal.encode_hex(contract_code)
     if self.chain.id != localnet.id:
-        raise GenLayerError("Contract schema is not supported on this network")
+        method = "gen_getContractSchemaForCode"
+        params = [encoded_code]
+    else:
+        method = "gen_getContractSchema"
+        params = [{"code": encoded_code}]
 
     response = self.provider.make_request(
-        method="gen_getContractSchemaForCode",
-        params=[eth_utils.hexadecimal.encode_hex(contract_code)],
+        method=method,
+        params=params,
     )
     return response["result"]
 

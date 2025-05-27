@@ -122,12 +122,17 @@ def write_contract(
     ]
     sender_account = account if account is not None else self.local_account
     serialized_data = serialize(data)
-    return send_transaction(
+    encoded_data = _encode_add_transaction_data(
         self=self,
-        recipient=address,
-        data=serialized_data,
         sender_account=sender_account,
+        recipient=address,
         consensus_max_rotations=consensus_max_rotations,
+        data=serialized_data,
+    )
+    return _send_transaction(
+        self=self,
+        encoded_data=encoded_data,
+        sender_account=sender_account,
         value=value,
     )
 
@@ -150,16 +155,78 @@ def deploy_contract(
     ]
     serialized_data = serialize(data)
     sender_account = account if account is not None else self.local_account
-    return send_transaction(
+
+    encoded_data = _encode_add_transaction_data(
         self=self,
-        recipient=ADDRESS_ZERO,
-        data=serialized_data,
         sender_account=sender_account,
+        recipient=ADDRESS_ZERO,
         consensus_max_rotations=consensus_max_rotations,
+        data=serialized_data,
+    )
+    return _send_transaction(
+        self=self,
+        encoded_data=encoded_data,
+        sender_account=sender_account,
     )
 
 
-def prepare_transaction(
+def appeal_transaction(
+    self: GenLayerClient,
+    transaction_id: HexStr,
+    account: Optional[LocalAccount] = None,
+) -> None:
+    sender_account = account if account is not None else self.local_account
+    encoded_data = _encode_submit_appeal_data(self=self, transaction_id=transaction_id)
+
+    return _send_transaction(
+        self=self, encoded_data=encoded_data, sender_account=sender_account
+    )
+
+
+def _encode_submit_appeal_data(
+    self: GenLayerClient,
+    transaction_id: HexStr,
+):
+    consensus_main_contract = self.w3.eth.contract(
+        abi=self.chain.consensus_main_contract["abi"]
+    )
+    contract_fn = consensus_main_contract.get_function_by_name("submitAppeal")
+    params = abi_encode(
+        contract_fn.argument_types,
+        [transaction_id],
+    )
+    function_selector = eth_utils.keccak(text=contract_fn.signature)[:4].hex()
+    encoded_data = "0x" + function_selector + params.hex()
+    return encoded_data
+
+
+def _encode_add_transaction_data(
+    self: GenLayerClient,
+    sender_account,
+    recipient,
+    consensus_max_rotations,
+    data,
+):
+    consensus_main_contract = self.w3.eth.contract(
+        abi=self.chain.consensus_main_contract["abi"]
+    )
+    contract_fn = consensus_main_contract.get_function_by_name("addTransaction")
+    params = abi_encode(
+        contract_fn.argument_types,
+        [
+            sender_account.address,
+            recipient,
+            self.chain.default_number_of_initial_validators,
+            consensus_max_rotations,
+            self.w3.to_bytes(hexstr=data),
+        ],
+    )
+    function_selector = eth_utils.keccak(text=contract_fn.signature)[:4].hex()
+    encoded_data = "0x" + function_selector + params.hex()
+    return encoded_data
+
+
+def _prepare_transaction(
     self: GenLayerClient,
     sender: Union[Address, ChecksumAddress],
     recipient: Union[Address, ChecksumAddress],
@@ -195,12 +262,10 @@ def prepare_transaction(
     return transaction
 
 
-def send_transaction(
+def _send_transaction(
     self: GenLayerClient,
-    recipient: Union[Address, ChecksumAddress],
-    data: HexStr,
+    encoded_data: HexStr,
     sender_account: Optional[LocalAccount] = None,
-    consensus_max_rotations: Optional[int] = None,
     value: int = 0,
 ):
     if sender_account is None:
@@ -213,24 +278,7 @@ def send_transaction(
             "Consensus main contract not initialized. Please ensure client is properly initialized.",
         )
 
-    consensus_main_contract = self.w3.eth.contract(
-        abi=self.chain.consensus_main_contract["abi"]
-    )
-    contract_fn = consensus_main_contract.get_function_by_name("addTransaction")
-    params = abi_encode(
-        contract_fn.argument_types,
-        [
-            sender_account.address,
-            recipient,
-            self.chain.default_number_of_initial_validators,
-            consensus_max_rotations,
-            self.w3.to_bytes(hexstr=data),
-        ],
-    )
-    function_selector = eth_utils.keccak(text=contract_fn.signature)[:4].hex()
-    encoded_data = "0x" + function_selector + params.hex()
-
-    transaction = prepare_transaction(
+    transaction = _prepare_transaction(
         self=self,
         sender=sender_account.address,
         recipient=self.chain.consensus_main_contract["address"],
@@ -248,6 +296,9 @@ def send_transaction(
     if tx_receipt.status != 1:
         raise GenLayerError("Transaction failed")
 
+    consensus_main_contract = self.w3.eth.contract(
+        abi=self.chain.consensus_main_contract["abi"]
+    )
     event = consensus_main_contract.get_event_by_name("NewTransaction")
     events = event.process_receipt(tx_receipt, DISCARD)
 

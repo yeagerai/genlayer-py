@@ -1,10 +1,7 @@
 from web3.eth import Eth
 from web3 import Web3
 from web3.types import Nonce, BlockIdentifier, ENS, _Hash32
-from eth_typing import (
-    Address,
-    ChecksumAddress,
-)
+from eth_typing import Address, ChecksumAddress, HexStr
 from eth_account.signers.local import LocalAccount
 from hexbytes import HexBytes
 from typing import AnyStr
@@ -23,6 +20,7 @@ from genlayer_py.contracts.actions import (
     read_contract,
     write_contract,
     deploy_contract,
+    appeal_transaction,
     get_contract_schema,
     get_contract_schema_for_code,
 )
@@ -30,7 +28,6 @@ from genlayer_py.chains.actions import initialize_consensus_smart_contract
 from genlayer_py.transactions.actions import (
     wait_for_transaction_receipt,
     get_transaction,
-    appeal_transaction,
 )
 from genlayer_py.config import transaction_config
 
@@ -177,6 +174,9 @@ class GenLayerClient(Eth):
 
     def appeal_transaction(
         self,
-        transaction_hash: _Hash32,
+        transaction_id: HexStr,
+        account: Optional[LocalAccount] = None,
     ):
-        return appeal_transaction(self=self, transaction_hash=transaction_hash)
+        return appeal_transaction(
+            self=self, transaction_id=transaction_id, account=account
+        )

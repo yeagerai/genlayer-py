@@ -78,17 +78,6 @@ def get_transaction(
     return raw_transaction.decode()
 
 
-
-def appeal_transaction(
-    self: GenLayerClient,
-    transaction_hash: _Hash32,
-) -> None:
-    response = self.provider.make_request(
-        method="sim_appealTransaction", params=[transaction_hash]
-    )
-    return response["result"]
-
-
 def _decode_localnet_transaction(tx: GenLayerTransaction) -> GenLayerTransaction:
     if "data" not in tx or tx["data"] is None:
         return tx

@@ -78,7 +78,6 @@ def get_transaction(
     return raw_transaction.decode()
 
 
-
 def appeal_transaction(
     self: GenLayerClient,
     transaction_hash: _Hash32,

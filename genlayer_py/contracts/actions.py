@@ -250,8 +250,8 @@ def _prepare_transaction(
         priority_fee = self.w3.to_wei(2, "gwei")
         max_fee = base_fee + priority_fee
         fee_data = {
-            "maxFeePerGas": max_fee,
-            "maxPriorityFeePerGas": priority_fee,
+            "maxFeePerGas": hex(max_fee),
+            "maxPriorityFeePerGas": hex(priority_fee),
         }
     else:
         fee_data = {
@@ -259,14 +259,22 @@ def _prepare_transaction(
         }
 
     transaction = {
-        "nonce": nonce,
-        "gas": 987474,
+        "from": sender,
+        "nonce": hex(nonce),
         "data": data,
         "to": recipient,
-        "value": value,
+        "value": hex(value),
         **fee_data,
         "chainId": self.chain.id,
     }
+    estimated_gas_response = self.provider.make_request(
+        "eth_estimateGas", params=[transaction]
+    )
+    if estimated_gas_response.get("error") is not None:
+        raise GenLayerError(
+            f"Error eth_estimateGas endpoint: {estimated_gas_response['error']['message']}"
+        )
+    transaction["gas"] = estimated_gas_response["result"]
     return transaction
 
 

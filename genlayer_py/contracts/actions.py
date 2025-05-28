@@ -174,12 +174,16 @@ def appeal_transaction(
     self: GenLayerClient,
     transaction_id: HexStr,
     account: Optional[LocalAccount] = None,
+    value: int = 0,
 ) -> None:
     sender_account = account if account is not None else self.local_account
     encoded_data = _encode_submit_appeal_data(self=self, transaction_id=transaction_id)
 
     return _send_transaction(
-        self=self, encoded_data=encoded_data, sender_account=sender_account
+        self=self,
+        encoded_data=encoded_data,
+        sender_account=sender_account,
+        value=value,
     )
 
 
@@ -191,9 +195,13 @@ def _encode_submit_appeal_data(
         abi=self.chain.consensus_main_contract["abi"]
     )
     contract_fn = consensus_main_contract.get_function_by_name("submitAppeal")
+    if transaction_id.startswith("0x"):
+        transaction_id = transaction_id[2:]
+    if len(transaction_id) > 64:
+        raise ValueError("transaction_id too long for bytes32")
     params = abi_encode(
         contract_fn.argument_types,
-        [transaction_id],
+        [self.w3.to_bytes(hexstr=transaction_id)],
     )
     function_selector = eth_utils.keccak(text=contract_fn.signature)[:4].hex()
     encoded_data = "0x" + function_selector + params.hex()

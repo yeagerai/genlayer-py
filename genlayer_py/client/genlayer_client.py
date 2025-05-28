@@ -176,7 +176,11 @@ class GenLayerClient(Eth):
         self,
         transaction_id: HexStr,
         account: Optional[LocalAccount] = None,
+        value: int = 0,
     ):
         return appeal_transaction(
-            self=self, transaction_id=transaction_id, account=account
+            self=self,
+            transaction_id=transaction_id,
+            account=account,
+            value=value,
         )

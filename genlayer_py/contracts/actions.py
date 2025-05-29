@@ -122,12 +122,17 @@ def write_contract(
     ]
     sender_account = account if account is not None else self.local_account
     serialized_data = serialize(data)
-    return send_transaction(
+    encoded_data = _encode_add_transaction_data(
         self=self,
-        recipient=address,
-        data=serialized_data,
         sender_account=sender_account,
+        recipient=address,
         consensus_max_rotations=consensus_max_rotations,
+        data=serialized_data,
+    )
+    return _send_transaction(
+        self=self,
+        encoded_data=encoded_data,
+        sender_account=sender_account,
         value=value,
     )
 
@@ -150,69 +155,66 @@ def deploy_contract(
     ]
     serialized_data = serialize(data)
     sender_account = account if account is not None else self.local_account
-    return send_transaction(
+
+    encoded_data = _encode_add_transaction_data(
         self=self,
-        recipient=ADDRESS_ZERO,
-        data=serialized_data,
         sender_account=sender_account,
+        recipient=ADDRESS_ZERO,
         consensus_max_rotations=consensus_max_rotations,
+        data=serialized_data,
+    )
+    return _send_transaction(
+        self=self,
+        encoded_data=encoded_data,
+        sender_account=sender_account,
     )
 
 
-def prepare_transaction(
+def appeal_transaction(
     self: GenLayerClient,
-    sender: Union[Address, ChecksumAddress],
-    recipient: Union[Address, ChecksumAddress],
-    data: HexStr,
+    transaction_id: HexStr,
+    account: Optional[LocalAccount] = None,
     value: int = 0,
-) -> Dict[str, Any]:
+) -> None:
+    sender_account = account if account is not None else self.local_account
+    encoded_data = _encode_submit_appeal_data(self=self, transaction_id=transaction_id)
 
-    nonce = self.get_current_nonce(address=sender)
-
-    if self.chain.id != localnet.id:
-        latest_block = self.w3.eth.get_block("latest")
-        base_fee = latest_block["baseFeePerGas"]
-        priority_fee = self.w3.to_wei(2, "gwei")
-        max_fee = base_fee + priority_fee
-        fee_data = {
-            "maxFeePerGas": max_fee,
-            "maxPriorityFeePerGas": priority_fee,
-        }
-    else:
-        fee_data = {
-            "gasPrice": 0,
-        }
-
-    transaction = {
-        "nonce": nonce,
-        "gas": 987474,
-        "data": data,
-        "to": recipient,
-        "value": value,
-        **fee_data,
-        "chainId": self.chain.id,
-    }
-    return transaction
+    return _send_transaction(
+        self=self,
+        encoded_data=encoded_data,
+        sender_account=sender_account,
+        value=value,
+    )
 
 
-def send_transaction(
+def _encode_submit_appeal_data(
     self: GenLayerClient,
-    recipient: Union[Address, ChecksumAddress],
-    data: HexStr,
-    sender_account: Optional[LocalAccount] = None,
-    consensus_max_rotations: Optional[int] = None,
-    value: int = 0,
+    transaction_id: HexStr,
 ):
-    if sender_account is None:
-        raise GenLayerError(
-            "No account set. Configure the client with an account or pass an account to this function."
-        )
+    consensus_main_contract = self.w3.eth.contract(
+        abi=self.chain.consensus_main_contract["abi"]
+    )
+    contract_fn = consensus_main_contract.get_function_by_name("submitAppeal")
+    if transaction_id.startswith("0x"):
+        transaction_id = transaction_id[2:]
+    if len(transaction_id) > 64:
+        raise ValueError("transaction_id too long for bytes32")
+    params = abi_encode(
+        contract_fn.argument_types,
+        [self.w3.to_bytes(hexstr=transaction_id)],
+    )
+    function_selector = eth_utils.keccak(text=contract_fn.signature)[:4].hex()
+    encoded_data = "0x" + function_selector + params.hex()
+    return encoded_data
 
-    if self.chain.consensus_main_contract is None:
-        raise GenLayerError(
-            "Consensus main contract not initialized. Please ensure client is properly initialized.",
-        )
 
+def _encode_add_transaction_data(
+    self: GenLayerClient,
+    sender_account,
+    recipient,
+    consensus_max_rotations,
+    data,
+):
     consensus_main_contract = self.w3.eth.contract(
         abi=self.chain.consensus_main_contract["abi"]
     )
@@ -229,8 +231,70 @@ def send_transaction(
     )
     function_selector = eth_utils.keccak(text=contract_fn.signature)[:4].hex()
     encoded_data = "0x" + function_selector + params.hex()
+    return encoded_data
 
-    transaction = prepare_transaction(
+
+def _prepare_transaction(
+    self: GenLayerClient,
+    sender: Union[Address, ChecksumAddress],
+    recipient: Union[Address, ChecksumAddress],
+    data: HexStr,
+    value: int = 0,
+) -> Dict[str, Any]:
+
+    nonce = self.get_current_nonce(address=sender)
+
+    if self.chain.id != localnet.id:
+        latest_block = self.w3.eth.get_block("latest")
+        base_fee = latest_block["baseFeePerGas"]
+        priority_fee = self.w3.to_wei(2, "gwei")
+        max_fee = base_fee + priority_fee
+        fee_data = {
+            "maxFeePerGas": hex(max_fee),
+            "maxPriorityFeePerGas": hex(priority_fee),
+        }
+    else:
+        fee_data = {
+            "gasPrice": 0,
+        }
+
+    transaction = {
+        "from": sender,
+        "nonce": hex(nonce),
+        "data": data,
+        "to": recipient,
+        "value": hex(value),
+        **fee_data,
+        "chainId": self.chain.id,
+    }
+    estimated_gas_response = self.provider.make_request(
+        "eth_estimateGas", params=[transaction]
+    )
+    if estimated_gas_response.get("error") is not None:
+        raise GenLayerError(
+            f"Error eth_estimateGas endpoint: {estimated_gas_response['error']['message']}"
+        )
+    transaction["gas"] = estimated_gas_response["result"]
+    return transaction
+
+
+def _send_transaction(
+    self: GenLayerClient,
+    encoded_data: HexStr,
+    sender_account: Optional[LocalAccount] = None,
+    value: int = 0,
+):
+    if sender_account is None:
+        raise GenLayerError(
+            "No account set. Configure the client with an account or pass an account to this function."
+        )
+
+    if self.chain.consensus_main_contract is None:
+        raise GenLayerError(
+            "Consensus main contract not initialized. Please ensure client is properly initialized.",
+        )
+
+    transaction = _prepare_transaction(
         self=self,
         sender=sender_account.address,
         recipient=self.chain.consensus_main_contract["address"],
@@ -248,6 +312,9 @@ def send_transaction(
     if tx_receipt.status != 1:
         raise GenLayerError("Transaction failed")
 
+    consensus_main_contract = self.w3.eth.contract(
+        abi=self.chain.consensus_main_contract["abi"]
+    )
     event = consensus_main_contract.get_event_by_name("NewTransaction")
     events = event.process_receipt(tx_receipt, DISCARD)
 

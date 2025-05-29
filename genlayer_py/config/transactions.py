@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class TransactionConfig:
-    wait_interval: int # Interval in ms
+    wait_interval: int  # Interval in ms
     retries: int
 
 

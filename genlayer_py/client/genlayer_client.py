@@ -1,10 +1,7 @@
 from web3.eth import Eth
 from web3 import Web3
 from web3.types import Nonce, BlockIdentifier, ENS, _Hash32
-from eth_typing import (
-    Address,
-    ChecksumAddress,
-)
+from eth_typing import Address, ChecksumAddress, HexStr
 from eth_account.signers.local import LocalAccount
 from hexbytes import HexBytes
 from typing import AnyStr
@@ -23,6 +20,7 @@ from genlayer_py.contracts.actions import (
     read_contract,
     write_contract,
     deploy_contract,
+    appeal_transaction,
     get_contract_schema,
     get_contract_schema_for_code,
 )
@@ -173,3 +171,16 @@ class GenLayerClient(Eth):
         transaction_hash: _Hash32,
     ) -> GenLayerTransaction:
         return get_transaction(self=self, transaction_hash=transaction_hash)
+
+    def appeal_transaction(
+        self,
+        transaction_id: HexStr,
+        account: Optional[LocalAccount] = None,
+        value: int = 0,
+    ):
+        return appeal_transaction(
+            self=self,
+            transaction_id=transaction_id,
+            account=account,
+            value=value,
+        )

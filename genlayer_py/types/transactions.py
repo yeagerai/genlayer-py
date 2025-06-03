@@ -1,3 +1,4 @@
+import logging
 import rlp
 from genlayer_py.abi import calldata
 from enum import Enum
@@ -413,17 +414,15 @@ class GenLayerRawTransaction:
                 }
 
             else:
-                print(
+                logging.warning(
                     "[decode_input_data] Unexpected RLP array length:",
                     len(rlp_decoded_array),
                     rlp_decoded_array,
                 )
                 return None
         except Exception as e:
-            print(
-                "[decode_input_data] Error decoding RLP:",
-                str(e),
-                "Raw RLP App Data:",
+            logging.warning(
+                f"[decode_input_data] Error decoding RLP: {e} Raw RLP App Data: ",
                 self.tx_data,
             )
             return None

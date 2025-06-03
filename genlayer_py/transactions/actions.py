@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from web3.types import _Hash32
 from genlayer_py.config import transaction_config
 from genlayer_py.types import TransactionStatus, TRANSACTION_STATUS_NAME_TO_NUMBER
@@ -85,7 +86,10 @@ def _decode_localnet_transaction(tx: GenLayerTransaction) -> GenLayerTransaction
     try:
         leader_receipt = tx.get("consensus_data", {}).get("leader_receipt")
         if leader_receipt is not None:
-            for receipt in leader_receipt:
+            receipts = (
+                leader_receipt if isinstance(leader_receipt, list) else [leader_receipt]
+            )
+            for receipt in receipts:
                 if "result" in receipt:
                     receipt["result"] = result_to_user_friendly_json(receipt["result"])
 
@@ -98,12 +102,18 @@ def _decode_localnet_transaction(tx: GenLayerTransaction) -> GenLayerTransaction
                     }
 
                 if "eq_outputs" in receipt:
-                    receipt["eq_outputs"] = {
-                        key: result_to_user_friendly_json(
-                            base64.b64decode(value).decode("utf-8")
-                        )
-                        for key, value in receipt["eq_outputs"].items()
-                    }
+                    decoded_outputs = {}
+                    for key, value in receipt["eq_outputs"].items():
+                        try:
+                            decoded_value = base64.b64decode(value).decode("utf-8")
+                            decoded_outputs[key] = result_to_user_friendly_json(
+                                decoded_value
+                            )
+                        except (ValueError, UnicodeDecodeError) as e:
+                            logging.warning(f"Error decoding eq_output {key}: {str(e)}")
+                            decoded_outputs[key] = value
+                    receipt["eq_outputs"] = decoded_outputs
+
         if "calldata" in tx.get("data", {}):
             tx["data"]["calldata"] = {
                 "base64": tx["data"]["calldata"],
@@ -111,5 +121,5 @@ def _decode_localnet_transaction(tx: GenLayerTransaction) -> GenLayerTransaction
             }
 
     except Exception as e:
-        print("Error decoding transaction:", str(e))
+        logging.warning(f"Error decoding transaction: {str(e)}")
     return tx

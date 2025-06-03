@@ -415,14 +415,15 @@ class GenLayerRawTransaction:
 
             else:
                 logging.warning(
-                    "[decode_input_data] Unexpected RLP array length:",
+                    "[decode_input_data] Unexpected RLP array length: %s %s",
                     len(rlp_decoded_array),
                     rlp_decoded_array,
                 )
                 return None
         except Exception as e:
             logging.warning(
-                f"[decode_input_data] Error decoding RLP: {e} Raw RLP App Data: ",
+                "[decode_input_data] Error decoding RLP: %s Raw RLP App Data: %s",
+                e,
                 self.tx_data,
             )
             return None

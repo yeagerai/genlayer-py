@@ -85,26 +85,25 @@ def _decode_localnet_transaction(tx: GenLayerTransaction) -> GenLayerTransaction
     try:
         leader_receipt = tx.get("consensus_data", {}).get("leader_receipt")
         if leader_receipt is not None:
-            if "result" in leader_receipt:
-                leader_receipt["result"] = result_to_user_friendly_json(
-                    leader_receipt["result"]
-                )
+            for receipt in leader_receipt:
+                if "result" in receipt:
+                    receipt["result"] = result_to_user_friendly_json(receipt["result"])
 
-            if "calldata" in leader_receipt:
-                leader_receipt["calldata"] = {
-                    "base64": leader_receipt["calldata"],
-                    **calldata_to_user_friendly_json(
-                        b64_to_array(leader_receipt["calldata"])
-                    ),
-                }
+                if "calldata" in receipt:
+                    receipt["calldata"] = {
+                        "base64": receipt["calldata"],
+                        **calldata_to_user_friendly_json(
+                            b64_to_array(receipt["calldata"])
+                        ),
+                    }
 
-            if "eq_outputs" in leader_receipt:
-                leader_receipt["eq_outputs"] = {
-                    key: result_to_user_friendly_json(
-                        base64.b64decode(value).decode("utf-8")
-                    )
-                    for key, value in leader_receipt["eq_outputs"].items()
-                }
+                if "eq_outputs" in receipt:
+                    receipt["eq_outputs"] = {
+                        key: result_to_user_friendly_json(
+                            base64.b64decode(value).decode("utf-8")
+                        )
+                        for key, value in receipt["eq_outputs"].items()
+                    }
         if "calldata" in tx.get("data", {}):
             tx["data"]["calldata"] = {
                 "base64": tx["data"]["calldata"],

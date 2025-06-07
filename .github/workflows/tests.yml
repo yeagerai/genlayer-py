@@ -1,31 +1,29 @@
-name: Unit tests
+name: Tests
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_call:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
 
 jobs:
-  run_unit_tests:
+  run-unit-tests:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Setup | Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup | Install Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
 
-      - name: Install dependencies
+      - name: Setup | Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install .
           pip install -r requirements.test.txt
 
-      - name: Run Pytest
-        run: pytest tests/unit --maxfail=5 --disable-warnings -v
+      - name: Action | Run Unit Tests
+        run: pytest tests/unit --disable-warnings -v

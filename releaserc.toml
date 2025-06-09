@@ -47,8 +47,8 @@ default = "github-actions <github-actions[bot]@genlayerlabs.com>"
 [semantic_release.commit_parser_options]
 minor_tags = ["feat"]
 patch_tags = ["fix", "perf"]
-other_allowed_tags = ["build", "chore", "ci", "docs", "style", "refactor", "test"]
-allowed_tags = ["feat", "fix", "perf", "build", "chore", "ci", "docs", "style", "refactor", "test"]
+other_allowed_tags = ["build", "chore", "ci", "docs", "style", "refactor", "test", "revert"]
+allowed_tags = ["feat", "fix", "perf", "build", "chore", "ci", "docs", "style", "refactor", "test", "revert"]
 default_bump_level = 0
 parse_squash_commits = true
 ignore_merge_commits = true

@@ -64,6 +64,91 @@ Have ideas for new features or use cases? We're eager to hear them! But first:
 - **2.5. Peer Review**: One or more core contributors will review your PR. They may suggest changes or improvements.
 - **2.6. Approval and Merge**: After approval from the reviewers, you can merge your PR with a squash and merge type of action.
 
+## Commit Standards and Versioning
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) and automated semantic versioning. **You do not need to manually update version numbers** - they are automatically handled based on your commit messages.
+
+### Standard Commit Message Format
+
+All commit messages must follow the conventional commit format:
+
+```text
+<type>[optional scope]: <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+#### Commit Types
+
+- **feat**: A new feature (triggers a **minor** version bump, e.g., 1.0.0 → 1.1.0)
+- **fix**: A bug fix (triggers a **patch** version bump, e.g., 1.0.0 → 1.0.1)
+- **perf**: A code change that improves performance (triggers a **patch** version bump)
+- **build**: Changes to build system or external dependencies
+- **chore**: Other changes that don't modify src or test files
+- **ci**: Changes to CI/CD configuration files and scripts
+- **docs**: Documentation only changes
+- **style**: Changes that don't affect code meaning (white-space, formatting, etc.)
+- **refactor**: A code change that neither fixes a bug nor adds a feature
+- **test**: Adding missing tests or correcting existing tests
+- **revert**: Reverts a previous commit (no version bump)
+
+#### Breaking Changes
+
+To trigger a **major** version bump (e.g., 1.0.0 → 2.0.0), include `BREAKING CHANGE:` in the commit footer or add `!` after the type:
+
+```text
+feat!: remove deprecated API endpoint
+
+BREAKING CHANGE: The old /api/v1/users endpoint has been removed. Use /api/v2/users instead.
+```
+
+#### Examples
+
+```bash
+# Minor version bump (new feature)
+feat: add user authentication support
+
+# Patch version bump (bug fix)
+fix: resolve memory leak in connection pool
+
+# Patch version bump (performance improvement)
+perf: optimize database query performance
+
+# No version bump (documentation)
+docs: update API documentation
+
+# Major version bump (breaking change)
+feat!: redesign user authentication API
+
+BREAKING CHANGE: The authentication flow has been completely redesigned. 
+Existing integrations will need to be updated to use the new OAuth2 flow.
+```
+
+### Standard PR Titles
+
+PR titles should follow the same conventional commit format as they will be used for the squash merge commit:
+
+- ✅ `feat: add support for custom validators`
+- ✅ `fix: resolve connection timeout issues`
+- ✅ `docs: update contributing guidelines`
+- ❌ `Add new feature`
+- ❌ `Bug fixes`
+- ❌ `Update docs`
+
+### Version Update Cases
+
+The project uses automated semantic versioning based on commit messages:
+
+| Commit Type | Version Impact | Example |
+|-------------|---------------|---------|
+| `feat:` | **Minor** version bump | 1.0.0 → 1.1.0 |
+| `fix:`, `perf:` | **Patch** version bump | 1.0.0 → 1.0.1 |
+| `feat!:`, `fix!:`, or `BREAKING CHANGE:` | **Major** version bump | 1.0.0 → 2.0.0 |
+| `docs:`, `style:`, `refactor:`, `test:`, `chore:`, `build:`, `ci:` | **No** version bump | Version stays the same |
+
+**Important**: Never manually edit version numbers in `pyproject.toml` or other files. The release automation will handle all version updates automatically when PRs are merged to the main branch.
 
 ### Improving Documentation
 

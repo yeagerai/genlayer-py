@@ -1,7 +1,7 @@
+import rlp
 from web3 import Web3
 from eth_abi import decode as abi_decode
 from genlayer_py.consensus.abi import CONSENSUS_MAIN_ABI
-from genlayer_py.abi.transactions import deserialize
 from genlayer_py.abi import calldata
 from eth_typing import HexStr
 
@@ -15,14 +15,12 @@ def decode_add_transaction_data(encoded_data):
         w3.to_bytes(hexstr=encoded_data[10:]),
     )
     encoded_tx_data = Web3.to_hex(abi_decoded[4])
-    deserialized_data = deserialize(abi_decoded[4])
-    decoded_tx_data = {}
+    deserialized_data = rlp.decode(abi_decoded[4])
+    decoded_tx_data = None
     if len(deserialized_data) == 3:
         decoded_tx_data = decode_tx_data_deploy(encoded_tx_data)
     elif len(deserialized_data) == 2:
         decoded_tx_data = decode_tx_data_call(encoded_tx_data)
-    else:
-        return None
     return {
         "sender_address": abi_decoded[0],
         "recipient_address": abi_decoded[1],
@@ -37,10 +35,10 @@ def decode_add_transaction_data(encoded_data):
 
 def decode_tx_data_call(encoded_data: HexStr):
     encoded_data_bytes = Web3.to_bytes(hexstr=encoded_data)
-    deserialized_data = deserialize(encoded_data_bytes)
+    deserialized_data = rlp.decode(encoded_data_bytes)
     if len(deserialized_data) != 2:
         return None
-    if deserialized_data[0] and deserialized_data[0] != "0x":
+    if deserialized_data[0]:
         call_data = calldata.decode(deserialized_data[0])
     else:
         call_data = None
@@ -54,10 +52,10 @@ def decode_tx_data_call(encoded_data: HexStr):
 
 def decode_tx_data_deploy(encoded_data: HexStr):
     encoded_data_bytes = Web3.to_bytes(hexstr=encoded_data)
-    deserialized_data = deserialize(encoded_data_bytes)
+    deserialized_data = rlp.decode(encoded_data_bytes)
     if len(deserialized_data) != 3:
         return None
-    if deserialized_data[1] and deserialized_data[1] != "0x":
+    if deserialized_data[1]:
         constructor_args = calldata.decode(deserialized_data[1])
     else:
         constructor_args = None

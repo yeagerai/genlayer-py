@@ -391,6 +391,8 @@ class GenLayerRawTransaction:
             rlp_decoded_array = rlp.decode(rlp_bytes)
             if len(rlp_decoded_array) == 3:
                 decoded_data = decode_tx_data_deploy(self.tx_data)
+                if decoded_data is None:
+                    return None
                 return {
                     "code": decoded_data["code"],
                     "constructor_args": decoded_data["constructor_args"],
@@ -400,6 +402,8 @@ class GenLayerRawTransaction:
                 }
             elif len(rlp_decoded_array) == 2:
                 decoded_data = decode_tx_data_call(self.tx_data)
+                if decoded_data is None:
+                    return None
                 return {
                     "call_data": decoded_data["call_data"],
                     "leader_only": decoded_data["leader_only"],

@@ -38,4 +38,13 @@ class GenLayerProvider(BaseProvider):
 
         if response.status_code != 200:
             raise GenLayerError(response.text)
-        return response.json()
+        resp = response.json()
+        self._raise_on_error(resp, method)
+        return resp
+
+    def _raise_on_error(self, resp: dict, ctx: str) -> None:
+        if resp.get("error"):
+            err = resp.get("error", {})
+            raise GenLayerError(
+                f"{ctx} failed (code={err.get('code', 'unknown')}): {err.get('message', 'unknown error')}"
+            )

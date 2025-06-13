@@ -33,12 +33,12 @@ class GenLayerProvider(BaseProvider):
                 json=payload,
                 headers={"Content-Type": "application/json"},
             )
-        except HTTPError as err:
-            raise GenLayerError(str(err)) from err
-
-        if response.status_code != 200:
-            raise GenLayerError(response.text)
-        resp = response.json()
+        except requests.exceptions.RequestException as err:
+            raise GenLayerError(f"Request to {self.url} failed: {str(err)}") from err
+        try:
+            resp = response.json()
+        except ValueError as err:
+            raise GenLayerError(f"{method} returned invalid JSON: {err}") from err
         self._raise_on_error(resp, method)
         return resp
 
